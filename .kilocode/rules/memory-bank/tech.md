@@ -20,6 +20,10 @@
 - **MySQL/MariaDB**: Primary database system
   - InnoDB engine for transaction support
   - UTF-8MB4 character encoding
+- **SQLite**: Alternative lightweight database system
+  - File-based storage
+  - WAL (Write-Ahead Logging) journal mode for better performance
+  - Foreign key constraint support
 
 ### Standards
 - **PSR-4**: Autoloading standard
@@ -45,7 +49,8 @@
   - JSON
   - mbstring
   - fileinfo
-- MySQL 8.0+ or MariaDB 10.5+
+- MySQL 8.0+ or MariaDB 10.5+ (for MySQL driver)
+- SQLite 3.8.8+ (for SQLite driver)
 - Web server (Apache/Nginx)
 - Composer for dependency management
 - Git for version control
@@ -92,7 +97,8 @@
 
 ### Compatibility
 - PHP 8.2+
-- MySQL 8.0+ / MariaDB 10.5+
+- MySQL 8.0+ / MariaDB 10.5+ (when using MySQL driver)
+- SQLite 3.8.8+ (when using SQLite driver)
 - Modern browsers (Chrome, Firefox, Safari, Edge)
 - Mobile-responsive design
 - Cross-platform CLI (Windows, Linux, macOS)
@@ -244,17 +250,27 @@ python3 pathfinder.py --output=directory_structure.md
 
 ### Configuration Files
 - `.env`: Environment variables
-- `config/database.php`: Database configuration
+- `config/database.php`: Database configuration with support for multiple drivers
 - `config/app.php`: Application settings
 - `phpstan.neon`: PHPStan configuration
 
 ### Environment Variables
 - `APP_ENV`: Application environment (development, staging, production)
-- `DB_HOST`: Database host
-- `DB_NAME`: Database name
-- `DB_USER`: Database username
-- `DB_PASS`: Database password
+- `DB_DRIVER`: Database driver to use (mysql, sqlite)
+- `DB_CHARSET`: Character encoding for database connections
 - `LOG_MODE`: Logging mode (file, response, both)
+
+#### MySQL-specific
+- `MYSQL_HOST`: MySQL database host
+- `MYSQL_PORT`: MySQL database port
+- `MYSQL_DATABASE`: MySQL database name
+- `MYSQL_USERNAME`: MySQL database username
+- `MYSQL_PASSWORD`: MySQL database password
+
+#### SQLite-specific
+- `SQLITE_DATABASE`: Path to SQLite database file
+- `SQLITE_FOREIGN_KEYS`: Enable foreign key constraints (true/false)
+- `SQLITE_JOURNAL_MODE`: Journal mode (WAL, DELETE, etc.)
 
 ## Maintenance and Monitoring
 

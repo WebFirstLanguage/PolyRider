@@ -17,6 +17,15 @@ The Logbie Framework is currently in development with a focus on establishing th
   - Logging system
   - Response handling
   - User management
+- **Database Integration**:
+  - Implemented a driver-based architecture for database abstraction
+  - Added support for SQLite alongside MySQL/MariaDB
+  - Created DatabaseDriverInterface with concrete implementations (MySQLDriver, SQLiteDriver)
+  - Implemented DatabaseDriverFactory for driver instantiation
+  - Updated configuration handling to support multiple database types
+  - Added comprehensive documentation in `Docs/database-integration-guide.md`
+  - Created example usage in `examples/database-integration-example.php`
+  - Added unit and integration tests for all database components
 - **CLI Component**:
   - Implemented a cross-platform CLI tool called "logbie"
   - Created build and clean commands with support for various options
@@ -40,8 +49,9 @@ The Logbie Framework is currently in development with a focus on establishing th
 
 1. **Completion of Core Components**:
    - Finalize implementation of remaining core classes
-   - Expand unit test coverage
+   - Expand unit test coverage for new database components
    - Continue ensuring PSR-4 compliance across the codebase
+   - Consider adding support for additional database systems (PostgreSQL, etc.)
 
 2. **CLI Tool Enhancement**:
    - Add more built-in commands for common tasks

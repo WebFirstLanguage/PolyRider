@@ -14,10 +14,12 @@ The Logbie Framework follows a modular architecture with clear separation of con
 
 2. **Database ORM**
    - Secure database abstraction layer
+   - Driver-based architecture supporting multiple database systems
    - Prepared statement caching
    - Transaction support
    - Relationship handling
    - SQL injection protection
+   - Support for MySQL/MariaDB and SQLite
 
 3. **JavaScript Framework (Logbie.js)**
    - Client-side AJAX handling
@@ -75,7 +77,12 @@ The Logbie Framework follows a modular architecture with clear separation of con
 │   ├── LogMode.php
 │   ├── Response.php
 │   ├── TemplateEngine.php
-│   └── UserManagement.php
+│   ├── UserManagement.php
+│   └── Database/    # Database driver components
+│       ├── DatabaseDriverInterface.php
+│       ├── DatabaseDriverFactory.php
+│       ├── MySQLDriver.php
+│       └── SQLiteDriver.php
 ├── CLI/            # Command-line interface components
 │   ├── Application.php
 │   ├── BaseCommand.php
@@ -166,6 +173,7 @@ The Logbie Framework follows a modular architecture with clear separation of con
 ```
 BaseModule
   ├── DatabaseORM
+  │   └── DatabaseDriver (MySQLDriver or SQLiteDriver)
   ├── Container
   ├── Response
   ├── Logger
@@ -221,7 +229,7 @@ CommandRegistry
 
 3. **Database Operations**
    ```
-   Module → DatabaseORM::beginTransaction() → CRUD operations → DatabaseORM::commit()
+   Module → DatabaseORM::beginTransaction() → DatabaseDriver::beginTransaction() → CRUD operations → DatabaseORM::commit() → DatabaseDriver::commit()
    ```
 
 4. **Template Rendering**
