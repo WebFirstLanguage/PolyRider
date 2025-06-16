@@ -129,6 +129,46 @@ class Container
     }
     
     /**
+     * Check if a dependency type can be resolved as a class
+     * 
+     * @param \ReflectionType|null $type The reflection type
+     * @return bool True if the type can be resolved as a class
+     */
+    private function canResolveClassDependency(?\ReflectionType $type): bool
+    {
+        if ($type === null) {
+            return false;
+        }
+        
+        if (!($type instanceof \ReflectionNamedType)) {
+            return false;
+        }
+        
+        if ($type->isBuiltin()) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get the class name from a reflection type
+     * 
+     * @param \ReflectionType|null $type The reflection type
+     * @return string|null The class name or null if not a class type
+     */
+    private function getClassNameFromType(?\ReflectionType $type): ?string
+    {
+        if (!$this->canResolveClassDependency($type)) {
+            return null;
+        }
+        
+        // At this point we know it's a ReflectionNamedType and not null
+        /** @var \ReflectionNamedType $type */
+        return $type->getName();
+    }
+    
+    /**
      * Build an instance of a class with automatic dependency resolution
      * 
      * @param string $className The class name to instantiate
@@ -167,7 +207,9 @@ class Container
             $dependency = $parameter->getType();
             
             // Skip non-class dependencies
-            if ($dependency === null || $dependency->isBuiltin()) {
+            if ($dependency === null ||
+                ($dependency instanceof \ReflectionNamedType && $dependency->isBuiltin()) ||
+                !($dependency instanceof \ReflectionNamedType)) {
                 // If the parameter has a default value, use it
                 if ($parameter->isDefaultValueAvailable()) {
                     $dependencies[] = $parameter->getDefaultValue();
@@ -180,7 +222,19 @@ class Container
             }
             
             // Get the dependency class name
-            $dependencyClassName = $dependency->getName();
+            $dependencyClassName = $this->getClassNameFromType($dependency);
+            
+            // Skip if we couldn't get a class name
+            if ($dependencyClassName === null) {
+                if ($parameter->isDefaultValueAvailable()) {
+                    $dependencies[] = $parameter->getDefaultValue();
+                    continue;
+                }
+                
+                throw new \InvalidArgumentException(
+                    "Cannot resolve parameter '{$parameter->getName()}' for class {$className}"
+                );
+            }
             
             // Check if the dependency is registered in the container
             if ($this->has($dependencyClassName)) {

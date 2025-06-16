@@ -72,7 +72,7 @@ class CommandRegistry
         }
         
         // If $command is a string and $callback is provided
-        if (is_string($command) && is_callable($callback)) {
+        if (is_callable($callback)) {
             $this->commands[$command] = $callback;
             $this->descriptions[$command] = $description ?? "Command '$command'";
             return $this;

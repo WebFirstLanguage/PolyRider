@@ -30,7 +30,7 @@ class ExampleModule extends BaseModule
             $this->logger->log("ExampleModule: Running action '{$action}'");
             
             // Route to the appropriate method based on the action
-            return match ($action) {
+            match ($action) {
                 'hello' => $this->helloAction($arguments[1] ?? 'World'),
                 'json' => $this->jsonAction(),
                 'form' => $this->formAction(),
@@ -38,12 +38,15 @@ class ExampleModule extends BaseModule
                 'template' => $this->templateAction(),
                 default => $this->defaultAction(),
             };
+            
+            return null;
         } catch (\Exception $e) {
             // Log the error
             $this->logger->log("Error in ExampleModule: " . $e->getMessage());
             
             // Send an error response
-            return $this->sendError($e->getMessage(), 500);
+            $this->sendError($e->getMessage(), 500);
+            return null;
         }
     }
     
@@ -115,17 +118,19 @@ class ExampleModule extends BaseModule
             
             // Validate the data
             if (empty($name) || empty($email)) {
-                return $this->sendError('Name and email are required', 400);
+                $this->sendError('Name and email are required', 400);
+                return;
             }
             
             // Process the form
             $this->logger->log("Form submitted: Name: {$name}, Email: {$email}");
             
             // Send a success response
-            return $this->sendSuccess(
+            $this->sendSuccess(
                 ['name' => $name, 'email' => $email],
                 'Form submitted successfully'
             );
+            return;
         }
         
         // Display the form
@@ -218,7 +223,8 @@ class ExampleModule extends BaseModule
             
             $this->response->setContent($html)->send();
         } catch (\Exception $e) {
-            return $this->sendError('Database error: ' . $e->getMessage(), 500);
+            $this->sendError('Database error: ' . $e->getMessage(), 500);
+            return;
         }
     }
     
@@ -284,7 +290,8 @@ HTML;
                 'users' => $users
             ])->send();
         } catch (\Exception $e) {
-            return $this->sendError('Template error: ' . $e->getMessage(), 500);
+            $this->sendError('Template error: ' . $e->getMessage(), 500);
+            return;
         }
     }
 }

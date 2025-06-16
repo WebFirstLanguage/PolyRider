@@ -194,7 +194,7 @@ HELP;
                 $this->logger->success("Cache files removed successfully");
                 
                 // Recreate the cache directory
-                if (!is_dir($cacheDir) && !mkdir($cacheDir, 0755, true)) {
+                if (!mkdir($cacheDir, 0755, true)) {
                     $this->logger->error("Failed to recreate cache directory");
                 }
             } else {
