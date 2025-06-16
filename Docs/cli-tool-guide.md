@@ -251,3 +251,36 @@ chmod +x logbie
 On Windows:
 ```powershell
 icacls logbie /grant Everyone:RX
+```
+
+## Cross-Platform Compatibility Notes
+
+The Logbie CLI tool is designed to work on multiple platforms (Windows, Linux, macOS). Here are some platform-specific considerations:
+
+### Windows
+
+- Use `php logbie <command>` to run the CLI tool
+- Use `icacls logbie /grant Everyone:RX` to set permissions
+- Directory paths use backslashes (`\`) internally, but the tool handles this automatically
+
+### Linux/macOS
+
+- Use `./logbie <command>` to run the CLI tool after setting execute permissions
+- Use `chmod +x logbie` to set execute permissions
+- Directory paths use forward slashes (`/`)
+
+### Common Issues and Solutions
+
+1. **"Command not found" on Linux/macOS**
+   - Make sure the file has execute permissions: `chmod +x logbie`
+   
+2. **"Could not find Composer autoloader" error**
+   - The CLI tool will automatically attempt to run `composer install` if the autoloader is not found
+   - This will only fail if Composer itself is not installed on your system
+   
+3. **Error recreating cache directory**
+   - This has been fixed in the latest version. If you encounter this issue, update your CLI tool.
+   
+4. **Permission issues with directory creation**
+   - Ensure you have write permissions to the project directory
+   - On Linux/macOS, you may need to run with sudo for certain operations

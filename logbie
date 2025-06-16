@@ -28,8 +28,42 @@ foreach ($autoloadPaths as $autoloadPath) {
 }
 
 if (!$autoloaderFound) {
-    echo "Error: Could not find Composer autoloader. Please run 'composer install' first." . PHP_EOL;
-    exit(1);
+    echo "Autoloader not found. Attempting to run Composer install..." . PHP_EOL;
+    
+    // Check if Composer is available
+    $composerCommand = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'composer.bat' : 'composer';
+    $checkComposer = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'where ' . $composerCommand : 'which ' . $composerCommand;
+    
+    exec($checkComposer, $output, $returnCode);
+    
+    if ($returnCode !== 0) {
+        echo "Error: Could not find Composer executable. Please install Composer and try again." . PHP_EOL;
+        exit(1);
+    }
+    
+    echo "Running Composer install..." . PHP_EOL;
+    passthru($composerCommand . ' install', $composerReturnCode);
+    
+    if ($composerReturnCode !== 0) {
+        echo "Error: Composer install failed. Please run it manually and check for errors." . PHP_EOL;
+        exit(1);
+    }
+    
+    echo "Composer install completed. Trying to load autoloader again..." . PHP_EOL;
+    
+    // Try to load the autoloader again
+    foreach ($autoloadPaths as $autoloadPath) {
+        if (file_exists($autoloadPath)) {
+            require $autoloadPath;
+            $autoloaderFound = true;
+            break;
+        }
+    }
+    
+    if (!$autoloaderFound) {
+        echo "Error: Still could not find autoloader after running Composer install." . PHP_EOL;
+        exit(1);
+    }
 }
 
 // Import required classes
