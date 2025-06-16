@@ -2,12 +2,15 @@
 
 namespace LogbieCore;
 
+use LogbieCore\Database\DatabaseDriverInterface;
+use LogbieCore\Database\DatabaseDriverFactory;
+
 /**
  * DatabaseORM Class
  * 
  * A secure and efficient database abstraction layer for the Logbie Framework.
  * Provides prepared statement caching, SQL injection protection, transaction support,
- * and relationship handling.
+ * and relationship handling. Supports multiple database backends through a driver system.
  * 
  * @package LogbieCore
  * @since 1.0.0
@@ -20,6 +23,13 @@ class DatabaseORM
      * @var \PDO
      */
     private \PDO $pdo;
+    
+    /**
+     * Database driver
+     * 
+     * @var DatabaseDriverInterface
+     */
+    private DatabaseDriverInterface $driver;
     
     /**
      * Prepared statement cache
@@ -50,32 +60,40 @@ class DatabaseORM
      */
     public function __construct(array $config)
     {
-        $dsn = sprintf(
-            '%s:host=%s;port=%s;dbname=%s;charset=%s',
-            $config['driver'] ?? 'mysql',
-            $config['host'] ?? 'localhost',
-            $config['port'] ?? '3306',
-            $config['database'],
-            $config['charset'] ?? 'utf8mb4'
-        );
+        // Get the driver name from config or use default
+        $driverName = $config['driver'] ?? 'mysql';
         
-        $options = [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            \PDO::ATTR_EMULATE_PREPARES => false,
-            \PDO::ATTR_PERSISTENT => true
-        ];
+        // Create the driver instance
+        $this->driver = DatabaseDriverFactory::create($driverName);
         
+        // Connect to the database
         try {
-            $this->pdo = new \PDO(
-                $dsn,
-                $config['username'],
-                $config['password'],
-                $options
-            );
+            $this->pdo = $this->driver->connect($config);
         } catch (\PDOException $e) {
             throw new \PDOException('Database connection failed: ' . $e->getMessage(), $e->getCode(), $e);
         }
+    }
+    
+    /**
+     * Alternative constructor using an existing driver instance
+     * 
+     * @param DatabaseDriverInterface $driver The database driver
+     * @param array $config Database configuration
+     * @return DatabaseORM The DatabaseORM instance
+     * @throws \PDOException If connection fails
+     */
+    public static function withDriver(DatabaseDriverInterface $driver, array $config): self
+    {
+        $instance = new self([]);
+        $instance->driver = $driver;
+        
+        try {
+            $instance->pdo = $driver->connect($config);
+        } catch (\PDOException $e) {
+            throw new \PDOException('Database connection failed: ' . $e->getMessage(), $e->getCode(), $e);
+        }
+        
+        return $instance;
     }
     
     /**
@@ -106,7 +124,7 @@ class DatabaseORM
             $statement = $this->prepare($sql);
             $statement->execute(array_values($data));
             
-            return (int) $this->pdo->lastInsertId();
+            return (int) $this->driver->lastInsertId($this->pdo);
         } catch (\PDOException $e) {
             throw new \RuntimeException('Create operation failed: ' . $e->getMessage(), 0, $e);
         }
@@ -354,11 +372,7 @@ class DatabaseORM
         }
         
         try {
-            $sql = "DESCRIBE {$table}";
-            $statement = $this->prepare($sql);
-            $statement->execute();
-            
-            $schema = $statement->fetchAll();
+            $schema = $this->driver->getTableSchema($this->pdo, $table);
             
             // Cache the schema
             $this->schemaCache[$table] = $schema;
@@ -380,7 +394,7 @@ class DatabaseORM
         try {
             // If this is the first transaction level, start a PDO transaction
             if ($this->transactionLevel === 0) {
-                $this->pdo->beginTransaction();
+                $this->driver->beginTransaction($this->pdo);
             }
             
             $this->transactionLevel++;
@@ -408,7 +422,7 @@ class DatabaseORM
             
             // Only commit if this is the outermost transaction
             if ($this->transactionLevel === 0) {
-                return $this->pdo->commit();
+                return $this->driver->commit($this->pdo);
             }
             
             return true;
@@ -431,7 +445,7 @@ class DatabaseORM
         
         try {
             $this->transactionLevel = 0;
-            return $this->pdo->rollBack();
+            return $this->driver->rollback($this->pdo);
         } catch (\PDOException $e) {
             throw new \RuntimeException('Failed to rollback transaction: ' . $e->getMessage(), 0, $e);
         }
@@ -452,7 +466,7 @@ class DatabaseORM
         }
         
         // Prepare and cache the statement
-        $statement = $this->pdo->prepare($sql);
+        $statement = $this->driver->prepare($this->pdo, $sql);
         $this->statementCache[$sql] = $statement;
         
         return $statement;
@@ -486,5 +500,103 @@ class DatabaseORM
     public function getPdo(): \PDO
     {
         return $this->pdo;
+    }
+    
+    /**
+     * Get the database driver
+     * 
+     * @return DatabaseDriverInterface The database driver
+     */
+    public function getDriver(): DatabaseDriverInterface
+    {
+        return $this->driver;
+    }
+    
+    /**
+     * Execute a batch operation within a transaction
+     * 
+     * @param callable $operations Callback function that performs the operations
+     * @return mixed The result of the callback
+     * @throws \Exception If an error occurs during the operations
+     */
+    public function batchOperation(callable $operations)
+    {
+        $this->beginTransaction();
+        
+        try {
+            // Execute the batch operations
+            $result = $operations($this);
+            
+            $this->commit();
+            
+            return $result;
+        } catch (\Exception $e) {
+            $this->rollback();
+            throw $e;
+        }
+    }
+    
+    /**
+     * Batch insert multiple rows
+     * 
+     * @param string $table Table name
+     * @param array $columns Column names
+     * @param array $rows Array of row data
+     * @return int Number of inserted rows
+     * @throws \RuntimeException If the batch insert fails
+     */
+    public function batchCreate(string $table, array $columns, array $rows): int
+    {
+        if (empty($rows)) {
+            return 0;
+        }
+        
+        $placeholders = [];
+        $values = [];
+        
+        foreach ($rows as $row) {
+            $rowPlaceholders = [];
+            
+            foreach ($columns as $column) {
+                $rowPlaceholders[] = '?';
+                $values[] = $row[$column] ?? null;
+            }
+            
+            $placeholders[] = '(' . implode(', ', $rowPlaceholders) . ')';
+        }
+        
+        $sql = sprintf(
+            'INSERT INTO %s (%s) VALUES %s',
+            $table,
+            implode(', ', $columns),
+            implode(', ', $placeholders)
+        );
+        
+        try {
+            $statement = $this->prepare($sql);
+            $statement->execute($values);
+            
+            return $statement->rowCount();
+        } catch (\PDOException $e) {
+            throw new \RuntimeException('Batch create operation failed: ' . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    /**
+     * Optimize the database (driver-specific)
+     * 
+     * @return void
+     */
+    public function optimize(): void
+    {
+        // SQLite-specific optimization
+        if ($this->driver->getName() === 'sqlite') {
+            $this->query('ANALYZE;');
+            $this->query('VACUUM;');
+        }
+        // MySQL-specific optimization
+        else if ($this->driver->getName() === 'mysql') {
+            $this->query('OPTIMIZE TABLE ?', [$table]);
+        }
     }
 }

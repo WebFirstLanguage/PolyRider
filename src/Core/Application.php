@@ -2,6 +2,8 @@
 
 namespace LogbieCore;
 
+use LogbieCore\Database\DatabaseDriverFactory;
+
 /**
  * Application Class
  * 
@@ -49,6 +51,13 @@ class Application
     private ?object $currentModule = null;
     
     /**
+     * Configuration loader
+     * 
+     * @var ConfigLoader
+     */
+    private ConfigLoader $configLoader;
+    
+    /**
      * Constructor
      * 
      * @param string $basePath The base path of the application
@@ -59,6 +68,7 @@ class Application
         $this->basePath = rtrim($basePath, '/\\');
         $this->config = $config;
         $this->container = new Container();
+        $this->configLoader = new ConfigLoader($this->getBasePath('config'));
         
         // Register the application instance in the container
         $this->container->register('app', $this);
@@ -67,6 +77,10 @@ class Application
         // Register the container itself in the container
         $this->container->register('container', $this->container);
         $this->container->register(Container::class, $this->container);
+        
+        // Register the config loader in the container
+        $this->container->register('config', $this->configLoader);
+        $this->container->register(ConfigLoader::class, $this->configLoader);
     }
     
     /**
@@ -99,18 +113,7 @@ class Application
      */
     public function getConfig(string $key, mixed $default = null): mixed
     {
-        $keys = explode('.', $key);
-        $value = $this->config;
-        
-        foreach ($keys as $segment) {
-            if (!is_array($value) || !array_key_exists($segment, $value)) {
-                return $default;
-            }
-            
-            $value = $value[$segment];
-        }
-        
-        return $value;
+        return $this->configLoader->get($key, $default);
     }
     
     /**
@@ -122,22 +125,7 @@ class Application
      */
     public function setConfig(string $key, mixed $value): self
     {
-        $keys = explode('.', $key);
-        $config = &$this->config;
-        
-        foreach ($keys as $i => $segment) {
-            if ($i === count($keys) - 1) {
-                $config[$segment] = $value;
-                break;
-            }
-            
-            if (!isset($config[$segment]) || !is_array($config[$segment])) {
-                $config[$segment] = [];
-            }
-            
-            $config = &$config[$segment];
-        }
-        
+        $this->configLoader->set($key, $value);
         return $this;
     }
     
@@ -190,17 +178,28 @@ class Application
         
         // Register database service
         $this->container->register('db', function (Container $container) {
-            $dbConfig = $this->getConfig('database', [
-                'driver' => 'mysql',
-                'host' => 'localhost',
-                'port' => '3306',
-                'database' => 'logbie',
-                'username' => 'root',
-                'password' => '',
-                'charset' => 'utf8mb4'
-            ]);
+            try {
+                // Try to load database configuration from config file
+                $dbConfig = $this->configLoader->getDatabaseConfig();
+            } catch (\RuntimeException $e) {
+                // Fallback to default configuration
+                $dbConfig = [
+                    'driver' => 'mysql',
+                    'host' => 'localhost',
+                    'port' => '3306',
+                    'database' => 'logbie',
+                    'username' => 'root',
+                    'password' => '',
+                    'charset' => 'utf8mb4'
+                ];
+            }
             
             return new DatabaseORM($dbConfig);
+        });
+        
+        // Register database driver factory
+        $this->container->register('db.factory', function (Container $container) {
+            return new DatabaseDriverFactory();
         });
         
         // Register template engine service
@@ -239,6 +238,10 @@ class Application
         $this->container->register(UserManagement::class, function (Container $container) {
             return $container->get('users');
         });
+        
+        $this->container->register(DatabaseDriverFactory::class, function (Container $container) {
+            return $container->get('db.factory');
+        });
     }
     
     /**
@@ -248,11 +251,23 @@ class Application
      */
     protected function loadConfiguration(): void
     {
-        // Load configuration from files
-        $configPath = $this->getBasePath('config');
+        // Load database configuration
+        try {
+            $this->configLoader->load('database');
+        } catch (\RuntimeException $e) {
+            // Database configuration file not found, use defaults
+        }
         
-        // This is a placeholder. In a real implementation, we would
-        // load configuration from files in the config directory.
+        // Load other configuration files as needed
+        $configFiles = ['app', 'logging', 'services'];
+        
+        foreach ($configFiles as $file) {
+            try {
+                $this->configLoader->load($file);
+            } catch (\RuntimeException $e) {
+                // Configuration file not found, skip
+            }
+        }
     }
     
     /**
@@ -289,19 +304,30 @@ class Application
         // Log the exception
         if ($this->container->has('logger')) {
             $logger = $this->container->get('logger');
-            // In a real implementation, we would log the exception
-            // $logger->error($exception->getMessage(), ['exception' => $exception]);
+            $logger->error($exception->getMessage(), [
+                'exception' => get_class($exception),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString()
+            ]);
         }
         
         // Send an error response
         if ($this->container->has('response')) {
             $response = $this->container->get('response');
-            // In a real implementation, we would send an error response
-            // $response->setStatus(500)->setJson(['error' => $exception->getMessage()])->send();
+            $response->setStatus(500)
+                ->setJson([
+                    'error' => $exception->getMessage(),
+                    'code' => $exception->getCode()
+                ])
+                ->send();
         } else {
             // Fallback error handling
             http_response_code(500);
-            echo json_encode(['error' => $exception->getMessage()]);
+            echo json_encode([
+                'error' => $exception->getMessage(),
+                'code' => $exception->getCode()
+            ]);
         }
     }
     
@@ -400,5 +426,15 @@ class Application
     public function isBootstrapped(): bool
     {
         return $this->bootstrapped;
+    }
+    
+    /**
+     * Get the configuration loader
+     * 
+     * @return ConfigLoader
+     */
+    public function getConfigLoader(): ConfigLoader
+    {
+        return $this->configLoader;
     }
 }
