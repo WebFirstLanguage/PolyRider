@@ -107,16 +107,65 @@
 ### CLI Tool (logbie)
 ```bash
 # Display help information
-./logbie help
+php logbie help
+php logbie help <command>
+php logbie <command> --help
 
 # Build the application
-./logbie build [--no-composer] [--no-assets] [--dev|--prod]
+php logbie build [--no-composer] [--no-assets] [--dev|--prod]
 
 # Clean the application
-./logbie clean [--vendor] [--assets] [--cache] [--all]
+php logbie clean [--vendor] [--assets] [--cache] [--all]
 
 # Windows usage
 php logbie <command>
+
+# Linux/macOS usage (after setting execute permissions)
+./logbie <command>
+```
+
+### Adding Custom CLI Commands
+
+#### Class-Based Commands
+```php
+// Create a new command class
+namespace LogbieCLI\Command;
+
+use LogbieCLI\BaseCommand;
+
+class MyCustomCommand extends BaseCommand
+{
+    public function getName(): string
+    {
+        return 'my-command';
+    }
+    
+    public function getDescription(): string
+    {
+        return 'My custom command description';
+    }
+    
+    public function execute(array $args = []): int
+    {
+        // Command implementation
+        $this->logger->info("Executing my command...");
+        return 0;
+    }
+}
+
+// Register the command
+$registry = $app->getCommandRegistry();
+$registry->register(MyCustomCommand::class);
+```
+
+#### Callback-Based Commands
+```php
+// Register a callback-based command
+$registry = $app->getCommandRegistry();
+$registry->register('simple-command', function($args, $logger) {
+    $logger->info("Executing simple command...");
+    return 0;
+}, 'A simple command example');
 ```
 
 ### PHPStan Static Analysis

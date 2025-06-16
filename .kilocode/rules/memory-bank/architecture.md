@@ -50,6 +50,14 @@ The Logbie Framework follows a modular architecture with clear separation of con
    - Account management
    - Security features
 
+8. **CLI Component**
+   - Cross-platform command-line interface
+   - Extensible command registry
+   - Built-in commands (build, clean, help)
+   - Support for both class-based and callback-based commands
+   - Console logging with colorized output
+   - Dependency injection integration
+
 ## Source Code Paths
 
 ```
@@ -113,6 +121,11 @@ The Logbie Framework follows a modular architecture with clear separation of con
    - Schema information caching
    - Efficient JavaScript operations
 
+5. **Cross-Platform Compatibility**
+   - CLI tool works on Windows, Linux, and macOS
+   - Proper path handling with DIRECTORY_SEPARATOR
+   - Automatic detection of environment capabilities
+
 ## Design Patterns
 
 1. **Module Pattern**
@@ -137,6 +150,11 @@ The Logbie Framework follows a modular architecture with clear separation of con
 5. **Fluent Interface**
    - Method chaining for Response
    - Readable API design
+
+6. **Command Pattern**
+   - CLI commands encapsulate actions
+   - Standardized interface
+   - Extensible registry
 
 ## Component Relationships
 
