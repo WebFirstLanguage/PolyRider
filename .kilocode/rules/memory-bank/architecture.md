@@ -60,9 +60,20 @@ The Logbie Framework follows a modular architecture with clear separation of con
 │   ├── Container.php
 │   ├── DatabaseORM.php
 │   ├── Logger.php
+│   ├── LogMode.php
 │   ├── Response.php
 │   ├── TemplateEngine.php
 │   └── UserManagement.php
+├── CLI/            # Command-line interface components
+│   ├── Application.php
+│   ├── BaseCommand.php
+│   ├── CommandInterface.php
+│   ├── CommandRegistry.php
+│   ├── ConsoleLogger.php
+│   └── Command/    # CLI command implementations
+│       ├── BuildCommand.php
+│       ├── CleanCommand.php
+│       └── HelpCommand.php
 ├── Classes/        # Shared class files
 │   ├── CustomUUID.php
 │   ├── Utility/
@@ -139,12 +150,32 @@ BaseModule
   └── TemplateEngine (optional)
 ```
 
+### CLI Component Dependencies
+```
+LogbieCLI\Application
+  ├── CommandRegistry
+  ├── ConsoleLogger
+  └── Container (optional)
+
+CommandRegistry
+  └── BaseCommand
+      ├── ConsoleLogger
+      └── Container (optional)
+```
+
 ### Request Flow
 1. Client request → Application
 2. Application → Module (based on URL)
 3. Module processes request using core services
 4. Module generates response
 5. Response sent to client
+
+### CLI Command Flow
+1. User input → LogbieCLI\Application
+2. Application → CommandRegistry → Command
+3. Command executes with provided arguments
+4. Command outputs results via ConsoleLogger
+5. Command returns exit code
 
 ### Data Flow
 1. Client input → Module
@@ -161,21 +192,31 @@ BaseModule
    Application → Module::run() → Module::processRequest() → Response::send()
    ```
 
-2. **Database Operations**
+2. **CLI Command Execution**
+   ```
+   logbie script → LogbieCLI\Application::run() → CommandRegistry::get() → Command::execute()
+   ```
+
+3. **Database Operations**
    ```
    Module → DatabaseORM::beginTransaction() → CRUD operations → DatabaseORM::commit()
    ```
 
-3. **Template Rendering**
+4. **Template Rendering**
    ```
    Module → Response::render() → TemplateEngine::render() → Response::send()
    ```
 
-4. **Error Handling**
+5. **Error Handling**
    ```
    try/catch → Logger::log() → Response::setStatus() → Response::setJson() → Response::send()
    ```
 
-5. **User Authentication**
+6. **CLI Error Handling**
+   ```
+   try/catch → ConsoleLogger::error() → Command::return(error_code)
+   ```
+
+7. **User Authentication**
    ```
    Module → UserManagement::authenticateUser() → Session management → Response
