@@ -57,6 +57,10 @@ The Logbie Framework follows a modular architecture with clear separation of con
    - Support for both class-based and callback-based commands
    - Console logging with colorized output
    - Dependency injection integration
+   - Command-line argument parsing
+   - Comprehensive error handling
+   - Help documentation system
+   - Cross-platform path handling
 
 ## Source Code Paths
 

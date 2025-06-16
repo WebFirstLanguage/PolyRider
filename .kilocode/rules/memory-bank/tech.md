@@ -27,9 +27,15 @@
 
 ### Development Tools
 - **PHPStan**: Static analysis tool for PHP
+  - Level-based analysis
+  - Custom configuration in phpstan.neon
+  - Integrated into development workflow
 - **PHPUnit**: Testing framework
 - **PHP_CodeSniffer**: Code style checking
 - **CLI Tool**: Custom command-line interface
+  - Cross-platform support
+  - Extensible command registry
+  - Built-in commands for common tasks
 
 ## Development Setup
 
@@ -124,6 +130,8 @@ php logbie <command>
 ./logbie <command>
 ```
 
+The CLI tool provides a consistent interface for common development tasks and can be extended with custom commands. It includes comprehensive error handling, colorized output, and cross-platform compatibility.
+
 ### Adding Custom CLI Commands
 
 #### Class-Based Commands
@@ -178,6 +186,21 @@ vendor/bin/phpstan analyse src
 vendor/bin/phpstan analyse -c phpstan.neon
 ```
 
+PHPStan has been integrated into the development workflow to ensure code quality and type safety. Common issues that have been addressed include:
+- Void return type handling
+- Type safety in reflection operations
+- Redundant condition removal
+- Proper method call validation
+
+The phpstan.neon configuration includes:
+```yaml
+parameters:
+    level: 5
+    paths:
+        - src
+    treatPhpDocTypesAsCertain: false
+```
+
 ### PSR-4 Compliance Checker (cc.py)
 ```bash
 # Check compliance without making changes
@@ -206,6 +229,7 @@ python3 pathfinder.py --output=directory_structure.md
 4. Run PHPStan to check for type errors
 5. Write unit tests
 6. Document module functionality
+7. Update Dev_diary with changes
 
 ### Deployment Process
 1. Run all tests

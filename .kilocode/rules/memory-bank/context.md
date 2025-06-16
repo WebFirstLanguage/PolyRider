@@ -19,16 +19,21 @@ The Logbie Framework is currently in development with a focus on establishing th
   - User management
 - **CLI Component**:
   - Implemented a cross-platform CLI tool called "logbie"
-  - Created build and clean commands
+  - Created build and clean commands with support for various options
   - Designed an extensible architecture for custom command creation
-  - Added comprehensive documentation for CLI usage
+  - Added comprehensive documentation for CLI usage in `Docs/cli-tool-guide.md`
   - Implemented robust error handling and cross-platform compatibility
   - Added support for both class-based and callback-based commands
+  - Created a help command with detailed usage information
 - **Code Quality Improvements**:
   - Integrated PHPStan for static analysis
   - Fixed type safety issues and improved code quality
   - Added configuration for consistent code style
   - Resolved issues with void return types, type safety, and redundant conditions
+  - Documented all fixes in `phpstan-fixes.md`
+- **Development Process**:
+  - Established a development diary in the `Dev_diary` directory to track changes
+  - Created a structured approach to documenting development decisions
 
 ## Next Steps
 
@@ -39,13 +44,15 @@ The Logbie Framework is currently in development with a focus on establishing th
 
 2. **CLI Tool Enhancement**:
    - Add more built-in commands for common tasks
-   - Improve cross-platform compatibility
-   - Create additional documentation and examples
+   - Improve integration with the framework's container
+   - Add support for command aliases
+   - Enhance error reporting and debugging capabilities
 
 3. **Static Analysis Integration**:
    - Increase PHPStan analysis level gradually
    - Address any remaining code quality issues
    - Implement automated code quality checks in CI/CD
+   - Expand static analysis to JavaScript code
 
 4. **Integration Testing**:
    - Test interactions between components
