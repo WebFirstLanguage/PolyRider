@@ -56,6 +56,41 @@ Options:
 - `--cache`: Remove cache files
 - `--all`: Remove all (vendor, assets, cache) (default)
 
+### Generate Module
+
+Generate a new module skeleton for the Logbie Framework:
+
+```bash
+php logbie generate-module <module-name>
+```
+
+Arguments:
+- `module-name`: The name of the module to generate (required, must be in PascalCase)
+
+Options:
+- `--force`: Overwrite existing module if it exists
+- `--help, -h`: Display help information
+
+Example:
+```bash
+# Generate a new UserManager module
+php logbie generate-module UserManager
+
+# Force overwrite an existing module
+php logbie generate-module ContentHandler --force
+```
+
+The command creates a new module file in the `src/Modules/` directory with the proper namespace, class structure, and PSR-4 compliance. The generated module includes:
+
+- Proper class declaration extending BaseModule
+- Standard module documentation
+- Basic run method with action routing
+- Error handling structure
+- Default action implementation
+- Creation timestamp
+
+If the module already exists, the command will fail unless the `--force` option is used.
+
 ## Adding Custom Commands
 
 The Logbie CLI tool is designed to be extensible, allowing you to add your own custom commands. There are two ways to add custom commands:

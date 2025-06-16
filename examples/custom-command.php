@@ -115,5 +115,19 @@ $registry->register('greet', function($args, $logger) {
     return 0;
 }, 'A simple greeting command');
 
+// Example 3: Using the GenerateModuleCommand
+// This demonstrates how to use the built-in GenerateModuleCommand
+
+// Import the GenerateModuleCommand class
+use LogbieCLI\Command\GenerateModuleCommand;
+
+// Register the GenerateModuleCommand
+$registry->register(GenerateModuleCommand::class);
+
 // Output a message to confirm the commands were registered
-$app->getLogger()->debug("Custom commands registered: example, greet");
+$app->getLogger()->debug("Custom commands registered: example, greet, generate-module");
+
+// Usage examples:
+// php logbie generate-module UserManager
+// php logbie generate-module ContentHandler
+// php logbie generate-module --force ExistingModule

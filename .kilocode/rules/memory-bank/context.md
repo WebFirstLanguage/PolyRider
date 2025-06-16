@@ -25,6 +25,7 @@ The Logbie Framework is currently in development with a focus on establishing th
   - Implemented robust error handling and cross-platform compatibility
   - Added support for both class-based and callback-based commands
   - Created a help command with detailed usage information
+  - Added module generation command to scaffold new modules with proper structure
 - **Code Quality Improvements**:
   - Integrated PHPStan for static analysis
   - Fixed type safety issues and improved code quality
@@ -47,6 +48,7 @@ The Logbie Framework is currently in development with a focus on establishing th
    - Improve integration with the framework's container
    - Add support for command aliases
    - Enhance error reporting and debugging capabilities
+   - Extend module generation capabilities with templates and customization options
 
 3. **Static Analysis Integration**:
    - Increase PHPStan analysis level gradually

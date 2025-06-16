@@ -14,6 +14,7 @@
   - `BuildCommand`: For running composer install, creating directories, and compiling assets
   - `CleanCommand`: For removing vendor directory, generated assets, and cache files
   - `HelpCommand`: For displaying help information
+  - `GenerateModuleCommand`: For creating new module skeletons with proper structure and PSR-4 compliance
 - Added comprehensive documentation in `Docs/cli-tool-guide.md`
 - Ensured cross-platform compatibility (Windows, Linux, macOS)
 - Implemented robust error handling and logging
@@ -48,6 +49,7 @@
    - Add more built-in commands for common tasks
    - Improve integration with the framework's container
    - Add support for command aliases
+   - Enhance module generation with additional templates and customization options
 
 2. **Static Analysis**:
    - Gradually increase PHPStan analysis level
