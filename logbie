@@ -1,0 +1,93 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Logbie CLI
+ * 
+ * A command-line tool for the Logbie Framework.
+ * 
+ * @package Logbie
+ * @since 1.0.0
+ */
+
+// Determine the autoloader path
+$autoloadPaths = [
+    __DIR__ . '/vendor/autoload.php',                 // Local installation
+    __DIR__ . '/../../../vendor/autoload.php',        // Composer global installation
+    __DIR__ . '/../vendor/autoload.php',              // Development installation
+];
+
+$autoloaderFound = false;
+
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require $autoloadPath;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    echo "Error: Could not find Composer autoloader. Please run 'composer install' first." . PHP_EOL;
+    exit(1);
+}
+
+// Import required classes
+use LogbieCLI\Application;
+use LogbieCore\Container;
+
+// Error handling
+set_error_handler(function ($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        // This error code is not included in error_reporting
+        return;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+// Create a new application (global for command access)
+global $app;
+$app = new Application('Logbie CLI', '1.0.0');
+
+// Define a constant to indicate that the CLI is loaded
+define('LOGBIE_CLI_LOADED', true);
+
+// Load custom commands if available
+$customCommandsPath = __DIR__ . '/examples/custom-command.php';
+if (file_exists($customCommandsPath)) {
+    require $customCommandsPath;
+}
+
+try {
+    
+    // Try to load the framework container if available
+    try {
+        $containerPath = __DIR__ . '/src/Core/Container.php';
+        if (file_exists($containerPath) && class_exists(Container::class)) {
+            $container = new Container();
+            
+            // Register the command registry in the container
+            $container->register('command_registry', $app->getCommandRegistry());
+            
+            // Set the container in the application
+            $app->setContainer($container);
+        }
+    } catch (Throwable $e) {
+        // Ignore container loading errors
+        $app->getLogger()->debug("Could not load framework container: " . $e->getMessage());
+    }
+    
+    // Run the application
+    $exitCode = $app->run();
+    
+    // Exit with the appropriate code
+    exit($exitCode);
+} catch (Throwable $e) {
+    echo "Fatal error: " . $e->getMessage() . PHP_EOL;
+    
+    if (isset($app) && $app->getLogger()->getVerbosity() >= LogbieCLI\ConsoleLogger::VERBOSITY_DEBUG) {
+        echo $e->getTraceAsString() . PHP_EOL;
+    }
+    
+    exit(1);
+}

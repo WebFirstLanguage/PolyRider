@@ -20,7 +20,8 @@
     "autoload": {
         "psr-4": {
             "LogbieCore\\": "src/Core/",
-            "Logbie\\": "src/Modules/"
+            "Logbie\\": "src/Modules/",
+            "LogbieCLI\\": "src/CLI/"
         }
     },
     "autoload-dev": {
