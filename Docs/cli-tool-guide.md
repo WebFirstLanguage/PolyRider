@@ -7,7 +7,7 @@ The Logbie CLI tool is a command-line interface for the Logbie Framework that pr
 The CLI tool is included with the Logbie Framework. To use it, simply run the `logbie` command from the project root directory:
 
 ```bash
-./logbie help
+php logbie help
 ```
 
 On Windows, you may need to use:
@@ -23,9 +23,9 @@ php logbie help
 Display help information for available commands:
 
 ```bash
-./logbie help
-./logbie help <command>
-./logbie <command> --help
+php logbie help
+php logbie help <command>
+php logbie <command> --help
 ```
 
 ### Build
@@ -33,7 +33,7 @@ Display help information for available commands:
 Build the application by running composer install, creating necessary directories, and compiling frontend assets if present:
 
 ```bash
-./logbie build
+php logbie build
 ```
 
 Options:
@@ -47,7 +47,7 @@ Options:
 Clean the application by removing Composer's vendor directory, generated assets, and cache files:
 
 ```bash
-./logbie clean
+php logbie clean
 ```
 
 Options:
@@ -257,16 +257,19 @@ icacls logbie /grant Everyone:RX
 
 The Logbie CLI tool is designed to work on multiple platforms (Windows, Linux, macOS). Here are some platform-specific considerations:
 
-### Windows
+### Universal Method (All Platforms)
 
 - Use `php logbie <command>` to run the CLI tool
-- Use `icacls logbie /grant Everyone:RX` to set permissions
+- This method works consistently across all platforms
+
+### Windows
+
+- Use `icacls logbie /grant Everyone:RX` to set permissions if needed
 - Directory paths use backslashes (`\`) internally, but the tool handles this automatically
 
 ### Linux/macOS
 
-- Use `./logbie <command>` to run the CLI tool after setting execute permissions
-- Use `chmod +x logbie` to set execute permissions
+- Alternatively, after setting execute permissions with `chmod +x logbie`, you can also use `./logbie <command>`
 - Directory paths use forward slashes (`/`)
 
 ### Common Issues and Solutions
