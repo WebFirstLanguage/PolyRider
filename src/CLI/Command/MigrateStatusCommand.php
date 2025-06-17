@@ -77,7 +77,7 @@ HELP;
     public function execute(array $args = []): int
     {
         try {
-            $db = $this->getService('db');
+            $db = $this->getDatabaseConnection();
             $migrationManager = new MigrationManager($db);
             
             $allMigrations = $this->getAllMigrations();
@@ -206,5 +206,39 @@ HELP;
     private function getMigrationsDirectory(): string
     {
         return getcwd() . '/database/migrations';
+    }
+    
+    /**
+     * Get database connection
+     * 
+     * @return \LogbieCore\DatabaseORM
+     * @throws \RuntimeException If database connection fails
+     */
+    private function getDatabaseConnection(): \LogbieCore\DatabaseORM
+    {
+        if ($this->hasContainer()) {
+            try {
+                return $this->getService('db');
+            } catch (\Exception $e) {
+            }
+        }
+        
+        $configPath = getcwd() . '/config/database.php';
+        if (!file_exists($configPath)) {
+            throw new \RuntimeException("Database configuration file not found at: {$configPath}");
+        }
+        
+        $config = require $configPath;
+        $defaultConnection = $config['default'] ?? 'sqlite';
+        $connectionConfig = $config['connections'][$defaultConnection] ?? null;
+        
+        if (!$connectionConfig) {
+            throw new \RuntimeException("Database connection '{$defaultConnection}' not configured");
+        }
+        
+        $driverFactory = new \LogbieCore\Database\DatabaseDriverFactory();
+        $driver = $driverFactory->create($connectionConfig['driver'], $connectionConfig);
+        
+        return \LogbieCore\DatabaseORM::withDriver($driver, $connectionConfig);
     }
 }

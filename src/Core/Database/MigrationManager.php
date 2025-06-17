@@ -63,9 +63,9 @@ class MigrationManager
     {
         $this->ensureMigrationsTableExists();
         
-        return $this->db->read($this->migrationsTable, [], [
-            'order' => 'batch ASC, migration ASC'
-        ]);
+        return $this->db->query(
+            "SELECT * FROM {$this->migrationsTable} ORDER BY batch ASC, migration ASC"
+        );
     }
     
     /**
