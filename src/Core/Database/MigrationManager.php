@@ -47,11 +47,11 @@ class MigrationManager
      */
     public function ensureMigrationsTableExists(): void
     {
-        try {
-            $this->db->getTableSchema($this->migrationsTable);
-        } catch (\RuntimeException $e) {
-            $this->createMigrationsTable();
+        if ($this->hasTable($this->migrationsTable)) {
+            return;
         }
+        
+        $this->createMigrationsTable();
     }
     
     /**
@@ -78,9 +78,10 @@ class MigrationManager
     {
         $this->ensureMigrationsTableExists();
         
-        return $this->db->read($this->migrationsTable, ['batch' => $batch], [
-            'order' => 'migration DESC'
-        ]);
+        return $this->db->query(
+            "SELECT * FROM {$this->migrationsTable} WHERE batch = ? ORDER BY migration DESC",
+            [$batch]
+        );
     }
     
     /**
@@ -175,6 +176,34 @@ class MigrationManager
         $migrations = $this->getExecutedMigrations();
         
         return array_column($migrations, 'migration');
+    }
+    
+    /**
+     * Check if a table exists in the database
+     * 
+     * @param string $tableName The table name to check
+     * @return bool True if table exists, false otherwise
+     */
+    public function hasTable(string $tableName): bool
+    {
+        try {
+            $driver = $this->db->getDriver()->getName();
+            
+            if ($driver === 'mysql') {
+                $result = $this->db->query("SHOW TABLES LIKE ?", [$tableName]);
+                return !empty($result);
+            } elseif ($driver === 'sqlite') {
+                $result = $this->db->query(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
+                    [$tableName]
+                );
+                return !empty($result);
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
     
     /**

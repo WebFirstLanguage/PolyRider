@@ -151,9 +151,21 @@ class SchemaBuilder
     public function hasTable(string $table): bool
     {
         try {
-            $this->db->getTableSchema($table);
-            return true;
-        } catch (\RuntimeException $e) {
+            $driver = $this->db->getDriver()->getName();
+            
+            if ($driver === 'mysql') {
+                $result = $this->db->query("SHOW TABLES LIKE ?", [$table]);
+                return !empty($result);
+            } elseif ($driver === 'sqlite') {
+                $result = $this->db->query(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name=?", 
+                    [$table]
+                );
+                return !empty($result);
+            }
+            
+            return false;
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -181,7 +193,8 @@ class SchemaBuilder
             $columnSql = $this->generateColumnSql($column, $driver);
             $columnDefinitions[] = $columnSql;
             
-            if ($column['primary']) {
+            // For SQLite, id columns already include PRIMARY KEY in their definition
+            if ($column['primary'] && !($column['type'] === 'id' && $driver === 'sqlite')) {
                 $primaryKeys[] = $column['name'];
             }
         }
