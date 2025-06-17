@@ -87,6 +87,15 @@ class Application
         
         // Register the clean command
         $this->registry->register(Command\CleanCommand::class);
+        
+        // Register the generate-module command
+        $this->registry->register(Command\GenerateModuleCommand::class);
+        
+        // Register the phpstan command
+        $this->registry->register(Command\PHPStanCommand::class);
+        
+        // Register the pest command
+        $this->registry->register(Command\PestCommand::class);
     }
     
     /**

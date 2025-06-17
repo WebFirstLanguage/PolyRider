@@ -596,7 +596,52 @@ class DatabaseORM
         }
         // MySQL-specific optimization
         else if ($this->driver->getName() === 'mysql') {
-            $this->query('OPTIMIZE TABLE ?', [$table]);
+            // Get all tables in the database
+            $tables = $this->getTables();
+            foreach ($tables as $table) {
+                $this->query('OPTIMIZE TABLE ?', [$table]);
+            }
+        }
+    }
+    
+    /**
+     * Get all tables in the current database
+     *
+     * @return array List of table names
+     * @throws \RuntimeException If the operation fails
+     */
+    public function getTables(): array
+    {
+        try {
+            // Different query based on database driver
+            if ($this->driver->getName() === 'mysql') {
+                $sql = "SHOW TABLES";
+                $statement = $this->prepare($sql);
+                $statement->execute();
+                $tables = [];
+                
+                while ($row = $statement->fetch(\PDO::FETCH_NUM)) {
+                    $tables[] = $row[0];
+                }
+                
+                return $tables;
+            } else if ($this->driver->getName() === 'sqlite') {
+                $sql = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                $statement = $this->prepare($sql);
+                $statement->execute();
+                $tables = [];
+                
+                while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
+                    $tables[] = $row['name'];
+                }
+                
+                return $tables;
+            }
+            
+            // Default empty array for unsupported drivers
+            return [];
+        } catch (\PDOException $e) {
+            throw new \RuntimeException('Failed to get tables: ' . $e->getMessage(), 0, $e);
         }
     }
 }

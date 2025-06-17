@@ -437,4 +437,14 @@ class Application
     {
         return $this->configLoader;
     }
+    
+    /**
+     * Get the raw configuration array
+     *
+     * @return array<string, mixed> The raw configuration array
+     */
+    public function getRawConfig(): array
+    {
+        return $this->config;
+    }
 }
