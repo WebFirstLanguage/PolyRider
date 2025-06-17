@@ -96,6 +96,12 @@ class Application
         
         // Register the pest command
         $this->registry->register(Command\PestCommand::class);
+        
+        // Register migration commands
+        $this->registry->register(Command\MigrateMakeCommand::class);
+        $this->registry->register(Command\MigrateCommand::class);
+        $this->registry->register(Command\MigrateRollbackCommand::class);
+        $this->registry->register(Command\MigrateStatusCommand::class);
     }
     
     /**
