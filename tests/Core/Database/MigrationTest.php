@@ -62,7 +62,7 @@ class MigrationTest extends TestCase
                 $mysqlDriver = new MySQLDriver();
                 $mysqlConfig = DatabaseTestFixtures::getMySQLConfig();
                 $this->mysqlOrm = DatabaseORM::withDriver($mysqlDriver, $mysqlConfig);
-            } catch (\PDOException $e) {
+            } catch (\Exception $e) {
                 $this->skipMySQLTests = true;
                 $this->mysqlOrm = null;
                 echo "MySQL tests skipped: " . $e->getMessage() . PHP_EOL;

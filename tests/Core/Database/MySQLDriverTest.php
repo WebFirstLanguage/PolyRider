@@ -237,7 +237,6 @@ class MySQLDriverTest extends TestCase
         
         // Configure the driver
         $this->driver->configureConnection($this->pdoMock, $config);
-        $this->driver->configureConnection($this->pdoMock, $config);
     }
     
     /**

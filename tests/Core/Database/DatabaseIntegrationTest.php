@@ -66,7 +66,7 @@ class DatabaseIntegrationTest extends TestCase
                 $this->mysqlOrm->query(DatabaseTestFixtures::createUsersTableMySQL());
                 $this->mysqlOrm->query(DatabaseTestFixtures::createRolesTableMySQL());
                 $this->mysqlOrm->query(DatabaseTestFixtures::createUserRolesTableMySQL());
-            } catch (\PDOException $e) {
+            } catch (\Exception $e) {
                 // If connection fails, skip MySQL tests
                 $this->skipMySQLTests = true;
                 $this->mysqlOrm = null;
