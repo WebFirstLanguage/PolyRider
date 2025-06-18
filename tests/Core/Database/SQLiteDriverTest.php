@@ -231,8 +231,8 @@ class SQLiteDriverTest extends TestCase
             ]
         ];
         
-        // Create a sequence of expectations
-        $this->pdoMock->expects($this->exactly(6))
+        // Create a sequence of expectations - 8 total calls (6 main config + 2 sqliteConfig)
+        $this->pdoMock->expects($this->exactly(8))
             ->method('exec')
             ->willReturnCallback(function($sql) {
                 static $callCount = 0;
@@ -256,26 +256,18 @@ class SQLiteDriverTest extends TestCase
                     case 5:
                         $this->assertEquals('PRAGMA mmap_size = 1048576;', $sql);
                         break;
+                    case 6:
+                        $this->assertEquals('PRAGMA auto_vacuum = INCREMENTAL;', $sql);
+                        break;
+                    case 7:
+                        $this->assertEquals('PRAGMA secure_delete = ON;', $sql);
+                        break;
                 }
                 
                 return 1; // PDO::exec() should return int|false, not bool
             });
         
         // Configure the driver
-        $this->driver->configureConnection($this->pdoMock, $config);
-        $this->pdoMock->expects($this->at(5))
-            ->method('exec')
-            ->with('PRAGMA mmap_size = 1048576;');
-        
-        // Expect exec to be called for each SQLite config option
-        $this->pdoMock->expects($this->at(6))
-            ->method('exec')
-            ->with('PRAGMA auto_vacuum = INCREMENTAL;');
-        
-        $this->pdoMock->expects($this->at(7))
-            ->method('exec')
-            ->with('PRAGMA secure_delete = ON;');
-        
         $this->driver->configureConnection($this->pdoMock, $config);
     }
     

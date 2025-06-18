@@ -84,7 +84,13 @@ class DatabaseORM
      */
     public static function withDriver(DatabaseDriverInterface $driver, array $config): self
     {
-        $instance = new self([]);
+        // Create instance without calling constructor to avoid real database connections
+        $instance = new class extends DatabaseORM {
+            public function __construct() {
+                // Empty constructor to bypass parent constructor
+            }
+        };
+        
         $instance->driver = $driver;
         
         try {
